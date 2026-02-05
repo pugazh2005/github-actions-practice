@@ -10,34 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1️⃣ Authenticate to Google Cloud
+      # 2️⃣ Authenticate to Google Cloud
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # 2️⃣ Setup gcloud
+      # 3️⃣ Setup gcloud CLI
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # 3️⃣ SSH key for VM access
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H compute.googleapis.com >> ~/.ssh/known_hosts
-
-      # 4️⃣ Deploy to VM
+      # 4️⃣ Deploy to VM using gcloud SSH (no manual SSH setup needed)
       - name: Deploy to VM
         run: |
           gcloud compute ssh ${{ secrets.VM_USER }}@${{ secrets.VM_NAME }} \
             --zone ${{ secrets.VM_ZONE }} \
+            --quiet \
             --command "
               cd ~/your-project &&
               git pull origin main &&
